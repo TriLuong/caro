@@ -29,6 +29,7 @@ export default function App() {
 
   const [winner, setWinner] = useState<any>(null);
   const [totalCheck, setTotalCheck] = useState(0);
+  const [moveWinner, setMoveWinner] = useState<IPosition[]>([]);
 
   const onCheck = (x: number, y: number, isEmpty: boolean) => {
     if (isEmpty && !winner) {
@@ -62,34 +63,35 @@ export default function App() {
   ) => {
     //Check Row
     let rowCheck = 0;
-    let numberOfRow = 0;
-    let numberOfCross1 = 0;
-    let numberOfCross2 = 0;
-
     let columnCheck = 0;
-    let numberOfColumn = 0;
+
+    let numberOfRow: IPosition[] = [];
+    let numberOfCross1: IPosition[] = [];
+    let numberOfCross2: IPosition[] = [];
+    let numberOfColumn: IPosition[] = [];
 
     playerCheck.forEach((item, index) => {
       //Check row, column
       if (index === 0) {
-        numberOfRow = 1;
-        numberOfColumn = 1;
+        numberOfRow.push(item);
+        numberOfColumn.push(item);
+
         rowCheck = item.x;
         columnCheck = item.y;
       } else {
         if (rowCheck === item.x) {
-          numberOfRow++;
+          numberOfRow.push(item);
         }
         if (columnCheck === item.y) {
-          numberOfColumn++;
+          numberOfColumn.push(item);
         }
       }
 
       if (item.x === item.y) {
-        numberOfCross1++;
+        numberOfCross1.push(item);
         //center
         if (item.x === Math.floor(ROW / 2) && item.y === Math.floor(ROW / 2)) {
-          numberOfCross2++;
+          numberOfCross2.push(item);
         }
       }
 
@@ -100,17 +102,15 @@ export default function App() {
         item.x !== item.y &&
         Math.abs(item.x - item.y) === ROW - 1
       ) {
-        numberOfCross2++;
+        numberOfCross2.push(item);
       }
     });
 
-    console.log("totalMove", totalMove, ROW * COLUMN);
-
     if (
-      numberOfColumn === 3 ||
-      numberOfRow === 3 ||
-      numberOfCross1 === 3 ||
-      numberOfCross2 === 3
+      numberOfColumn.length === 3 ||
+      numberOfRow.length === 3 ||
+      numberOfCross1.length === 3 ||
+      numberOfCross2.length === 3
     ) {
       setWinner(currentPlayer);
       if (currentPlayer === 1) {
@@ -118,8 +118,20 @@ export default function App() {
       } else {
         setPlayer2Score(player2Score + 1);
       }
+
+      let newMoveWinner: IPosition[] = [];
+      if (numberOfColumn.length === 3) {
+        newMoveWinner = numberOfColumn;
+      } else if (numberOfRow.length === 3) {
+        newMoveWinner = numberOfRow;
+      } else if (numberOfCross1.length === 3) {
+        newMoveWinner = numberOfCross1;
+      } else if (numberOfCross2.length === 3) {
+        newMoveWinner = numberOfCross2;
+      }
+
+      setMoveWinner(newMoveWinner);
     } else if (totalMove === ROW * COLUMN) {
-      console.log("DRAW");
       setWinner(3);
     }
   };
@@ -132,6 +144,7 @@ export default function App() {
     setTotalCheck(0);
     setPlayer1Score(0);
     setPlayer2Score(0);
+    setMoveWinner([]);
   };
 
   const onContinue = () => {
@@ -140,6 +153,7 @@ export default function App() {
     setPlayer(1);
     setWinner(null);
     setTotalCheck(0);
+    setMoveWinner([]);
   };
 
   return (
@@ -148,7 +162,9 @@ export default function App() {
       <SafeAreaView>
         <View style={styles.header}>
           <View style={[styles.containerPlayer]}>
-            <Text style={[styles.txt, styles.txtHightLight]}>
+            <Text
+              style={[styles.txt, styles.txtHightLight, { paddingBottom: 5 }]}
+            >
               {winner === 3 && "Draw"}
             </Text>
           </View>
@@ -156,22 +172,36 @@ export default function App() {
 
         <View style={styles.header}>
           <View style={[styles.containerPlayer, { borderRightWidth: 1 }]}>
-            <Text style={[styles.txt, styles.txtHightLight]}>
+            <Text
+              style={[styles.txt, styles.txtHightLight, { paddingBottom: 5 }]}
+            >
               {winner === 1 && "Winner"}
             </Text>
             <Text style={[styles.txt, player === 1 && styles.txtHightLight]}>
               Player 1 (X)
             </Text>
-            <Text style={styles.txt}>{`Score: ${player1Score}`}</Text>
+            <Text style={[styles.txt, { marginTop: 5 }]}>
+              <Text style={styles.txt}>{`Score: `}</Text>
+              <Text
+                style={[styles.txt, { fontWeight: "bold" }]}
+              >{`${player1Score}`}</Text>
+            </Text>
           </View>
           <View style={styles.containerPlayer}>
-            <Text style={[styles.txt, styles.txtHightLight]}>
+            <Text
+              style={[styles.txt, styles.txtHightLight, { paddingBottom: 5 }]}
+            >
               {winner === 2 && "Winner"}
             </Text>
             <Text style={[styles.txt, player === 2 && styles.txtHightLight]}>
               Player 2 (0)
             </Text>
-            <Text style={styles.txt}>{`Score: ${player2Score}`}</Text>
+            <Text style={[styles.txt, { marginTop: 5 }]}>
+              <Text style={styles.txt}>{`Score: `}</Text>
+              <Text
+                style={[styles.txt, { fontWeight: "bold" }]}
+              >{`${player2Score}`}</Text>
+            </Text>
           </View>
         </View>
 
@@ -182,13 +212,6 @@ export default function App() {
             style={[styles.btn, !winner && styles.btnDisabled]}
           >
             <Text style={styles.btnText}>Continue</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            disabled={!winner}
-            onPress={onNewGame}
-            style={[styles.btn, !winner && styles.btnDisabled]}
-          >
-            <Text style={styles.btnText}>New game</Text>
           </TouchableOpacity>
         </View>
 
@@ -211,13 +234,24 @@ export default function App() {
                       return;
                     }
                   });
+
+                  let xWinner: number[] = [];
+                  let yWinner: number[] = [];
+
                   return (
                     <TouchableOpacity
                       key={`col-${x}`}
                       style={styles.cell}
                       onPress={() => onCheck(x, y, cellOfPlayer === 0)}
                     >
-                      <Text style={styles.check}>
+                      <Text
+                        style={[
+                          styles.check,
+                          moveWinner.findIndex(
+                            (itm) => itm.x === x && itm.y === y
+                          ) >= 0 && styles.txtHightLight,
+                        ]}
+                      >
                         {cellOfPlayer === 1
                           ? "X"
                           : cellOfPlayer === 2
@@ -230,6 +264,19 @@ export default function App() {
               </View>
             );
           })}
+        </View>
+
+        <View style={{ marginVertical: 20 }}>
+          <TouchableOpacity
+            onPress={onNewGame}
+            style={[
+              styles.btn,
+              !winner && styles.btnDisabled,
+              { backgroundColor: "orange" },
+            ]}
+          >
+            <Text style={styles.btnText}>New game</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>

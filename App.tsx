@@ -56,37 +56,45 @@ export default function App() {
     }
   };
 
+  const groupBy = (key: string) => (array: any) =>
+    array.reduce((objectsByKeyValue: any, obj: any) => {
+      const value = obj[key];
+      objectsByKeyValue[value] = (objectsByKeyValue[value] || []).concat(obj);
+      return objectsByKeyValue;
+    }, {});
+
   const detectWinner = (
     playerCheck: IPosition[],
     currentPlayer: number,
     totalMove: number
   ) => {
     //Check Row
-    let rowCheck = 0;
-    let columnCheck = 0;
 
     let numberOfRow: IPosition[] = [];
+    let numberOfColumn: IPosition[] = [];
     let numberOfCross1: IPosition[] = [];
     let numberOfCross2: IPosition[] = [];
-    let numberOfColumn: IPosition[] = [];
 
-    playerCheck.forEach((item, index) => {
-      //Check row, column
-      if (index === 0) {
-        numberOfRow.push(item);
-        numberOfColumn.push(item);
+    //Check row, column
+    const xGroup = groupBy("x")(playerCheck);
+    const yGroup = groupBy("y")(playerCheck);
 
-        rowCheck = item.x;
-        columnCheck = item.y;
-      } else {
-        if (rowCheck === item.x) {
-          numberOfRow.push(item);
-        }
-        if (columnCheck === item.y) {
-          numberOfColumn.push(item);
-        }
+    const xGroupKey = Object.keys(xGroup);
+    const yGroupKey = Object.keys(yGroup);
+    xGroupKey.map((key) => {
+      if (xGroup[key].length === 3) {
+        numberOfRow = xGroup[key];
       }
+    });
 
+    yGroupKey.map((key) => {
+      if (yGroup[key].length === 3) {
+        numberOfColumn = yGroup[key];
+      }
+    });
+
+    //CheckCross
+    playerCheck.forEach((item, index) => {
       if (item.x === item.y) {
         numberOfCross1.push(item);
         //center
@@ -95,7 +103,6 @@ export default function App() {
         }
       }
 
-      //CheckCross
       if (
         (item.x === 0 || item.x === ROW - 1) &&
         (item.y === 0 || item.y === COLUMN - 1) &&

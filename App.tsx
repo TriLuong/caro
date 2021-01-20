@@ -1,14 +1,13 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Dimensions,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { styles } from "./Styles";
 
 const ROW = 3;
 const COLUMN = 3;
@@ -146,125 +145,93 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      <View style={{ marginVertical: 20 }}>
-        <Text>*** Score: </Text>
-        <Text style={{ marginLeft: 5 }}>{`Player 1 (X): ${player1Score}`}</Text>
-        <Text style={{ marginLeft: 5 }}>{`Player 2 (0): ${player2Score}`}</Text>
-      </View>
+      <SafeAreaView>
+        <View style={styles.header}>
+          <View style={[styles.containerPlayer]}>
+            <Text style={[styles.txt, styles.txtHightLight]}>
+              {winner === 3 && "Draw"}
+            </Text>
+          </View>
+        </View>
 
-      <View style={{ marginVertical: 20 }}>
-        <Text style={{ marginLeft: 5 }}>
-          <Text>{`Turn of Player: `}</Text>
-          <Text style={styles.txtHightLight}>{`${player} (${
-            player === 1 ? "X" : "O"
-          })`}</Text>
-        </Text>
-      </View>
+        <View style={styles.header}>
+          <View style={[styles.containerPlayer, { borderRightWidth: 1 }]}>
+            <Text style={[styles.txt, styles.txtHightLight]}>
+              {winner === 1 && "Winner"}
+            </Text>
+            <Text style={[styles.txt, player === 1 && styles.txtHightLight]}>
+              Player 1 (X)
+            </Text>
+            <Text style={styles.txt}>{`Score: ${player1Score}`}</Text>
+          </View>
+          <View style={styles.containerPlayer}>
+            <Text style={[styles.txt, styles.txtHightLight]}>
+              {winner === 2 && "Winner"}
+            </Text>
+            <Text style={[styles.txt, player === 2 && styles.txtHightLight]}>
+              Player 2 (0)
+            </Text>
+            <Text style={styles.txt}>{`Score: ${player2Score}`}</Text>
+          </View>
+        </View>
 
-      <View>
-        <Text>
-          <Text>{`Result: `}</Text>
-          <Text style={styles.txtHightLight}>
-            {winner && winner !== 3
-              ? `Player ${winner} WIN`
-              : winner === 3
-              ? `Draw`
-              : ``}
-          </Text>
-        </Text>
-      </View>
+        <View style={{ marginVertical: 20 }}>
+          <TouchableOpacity
+            disabled={!winner}
+            onPress={onContinue}
+            style={[styles.btn, !winner && styles.btnDisabled]}
+          >
+            <Text style={styles.btnText}>Continue</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            disabled={!winner}
+            onPress={onNewGame}
+            style={[styles.btn, !winner && styles.btnDisabled]}
+          >
+            <Text style={styles.btnText}>New game</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={{ marginVertical: 20 }}>
-        <TouchableOpacity
-          disabled={!winner}
-          onPress={onContinue}
-          style={[styles.btn, !winner && styles.btnDisabled]}
-        >
-          <Text style={styles.btnText}>Continue</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          disabled={!winner}
-          onPress={onNewGame}
-          style={[styles.btn, !winner && styles.btnDisabled]}
-        >
-          <Text style={styles.btnText}>New game</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={{ flexDirection: "row" }}>
+          {columnArr.map((row, y) => {
+            return (
+              <View key={`row-${y}`}>
+                {rowArr.map((col, x) => {
+                  let cellOfPlayer = 0;
 
-      <View style={{ flexDirection: "row" }}>
-        {columnArr.map((row, y) => {
-          return (
-            <View key={`row-${y}`}>
-              {rowArr.map((col, x) => {
-                let cellOfPlayer = 0;
-
-                player1Move.forEach((p1) => {
-                  if (p1.x === x && p1.y === y) {
-                    cellOfPlayer = 1;
-                    return;
-                  }
-                });
-                player2Move.forEach((p2) => {
-                  if (p2.x === x && p2.y === y) {
-                    cellOfPlayer = 2;
-                    return;
-                  }
-                });
-                return (
-                  <TouchableOpacity
-                    key={`col-${x}`}
-                    style={styles.cell}
-                    onPress={() => onCheck(x, y, cellOfPlayer === 0)}
-                  >
-                    <Text style={styles.check}>
-                      {cellOfPlayer === 1 ? "X" : cellOfPlayer === 2 ? "O" : ""}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          );
-        })}
-      </View>
+                  player1Move.forEach((p1) => {
+                    if (p1.x === x && p1.y === y) {
+                      cellOfPlayer = 1;
+                      return;
+                    }
+                  });
+                  player2Move.forEach((p2) => {
+                    if (p2.x === x && p2.y === y) {
+                      cellOfPlayer = 2;
+                      return;
+                    }
+                  });
+                  return (
+                    <TouchableOpacity
+                      key={`col-${x}`}
+                      style={styles.cell}
+                      onPress={() => onCheck(x, y, cellOfPlayer === 0)}
+                    >
+                      <Text style={styles.check}>
+                        {cellOfPlayer === 1
+                          ? "X"
+                          : cellOfPlayer === 2
+                          ? "O"
+                          : ""}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            );
+          })}
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cell: {
-    width: (width / 3) * 0.8,
-    height: (width / 3) * 0.8,
-    // backgroundColor: "red",
-    borderWidth: 1,
-
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 1,
-  },
-  btn: {
-    backgroundColor: "red",
-    marginVertical: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 5,
-  },
-  btnDisabled: {
-    backgroundColor: "gray",
-  },
-  btnText: {
-    color: "white",
-  },
-  check: {
-    fontSize: 40,
-  },
-  txtHightLight: {
-    color: "red",
-    fontWeight: "bold",
-  },
-});
